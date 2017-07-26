@@ -199,6 +199,7 @@ Todos(All):
 
 * Add `combineReducers`.
 * Elaborate on asyncrounus dispatch.
+* Elaborate on middleware.
 
 ## License
 
