@@ -1,5 +1,6 @@
 import sequtils
-import ../redux
+import ../redux/redux
+import ../redux/undoable
 
 type
   Todo = object
@@ -39,13 +40,14 @@ proc `$`(filter): string =
   of Done: "Done"
   of Incomplete: "Incomplete"
 
-proc `$`(state): string =
+proc `$`(state: UndoableState[TodosState]): string =
+  let state = state.getPresent()
   result = "Todos(" & $state.filter & "):\n"
   let todos = state.todos.filter(proc(todo): bool =
     state.filter == All or todo.completed and state.filter == Done or not todo.completed and state.filter == Incomplete
   )
   if len(todos) == 0:
-    result &= "/empty/"
+    result &= "/empty/\n"
   else:
     for todo in todos:
       result &= (if todo.completed: "[x] " else: "[ ] ") & todo.text & "\n"
@@ -70,13 +72,21 @@ proc todos(state, action): TodosState =
   else:
     result = state
 
-var store = newStore(todos)
+var store = newStore(undoable(todos))
 
-store.subscribe(proc (state) = echo $state)
+store.subscribe(proc (state: UndoableState[TodosState]) = echo $state)
 
 store.dispatch(AddTodoAction(text: "First point"))
+store.dispatch(UndoAction())
+store.dispatch(RedoAction())
 store.dispatch(AddTodoAction(text: "Next point"))
 store.dispatch(ToggleTodoAction(index: 1))
 store.dispatch(SetFilterAction(filter: Done))
 store.dispatch(SetFilterAction(filter: Incomplete))
 store.dispatch(ToggleTodoAction(index: 0))
+store.dispatch(UndoAction())
+store.dispatch(UndoAction())
+store.dispatch(UndoAction())
+store.dispatch(UndoAction())
+store.dispatch(UndoAction())
+store.dispatch(UndoAction())
