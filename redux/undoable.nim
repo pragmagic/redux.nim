@@ -25,7 +25,9 @@ proc undoable*[S](reducer: Reducer[S]): Reducer[UndoableState[S]] =
   )
 
   result = proc (state: UndoableState[S], action: Action): UndoableState[S] =
-    if action of UndoAction:
+    if state == nil:
+      result = initialState
+    elif action of UndoAction:
       assert state.isUndoable()
       var past = state.past
       let previous = past[high(past)]
@@ -45,8 +47,6 @@ proc undoable*[S](reducer: Reducer[S]): Reducer[UndoableState[S]] =
         present: next,
         future: future
       )
-    elif state == nil:
-      result = initialState
     else:
       let present = reducer(state=state.present, action=action)
       result = UndoableState[S](
